@@ -1,0 +1,42 @@
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    port = LaunchConfiguration('port')
+    baud_rate = LaunchConfiguration('baud_rate')
+    rtscts = LaunchConfiguration('rtscts')
+    debug_serial = LaunchConfiguration('debug_serial')
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'port',
+            default_value='/dev/ttyS0',
+            description='Serial port used by the Guppy driver.'),
+        DeclareLaunchArgument(
+            'baud_rate',
+            default_value='115200',
+            description='Serial baud rate used by the Guppy driver.'),
+        DeclareLaunchArgument(
+            'rtscts',
+            default_value='true',
+            description='Enable RTS/CTS serial flow control.'),
+        DeclareLaunchArgument(
+            'debug_serial',
+            default_value='false',
+            description='Enable serial packet debug logging.'),
+        Node(
+            package='guppy',
+            executable='guppy_driver_control',
+            name='guppy_driver_control',
+            output='screen',
+            parameters=[{
+                'port': port,
+                'baud_rate': baud_rate,
+                'rtscts': rtscts,
+                'debug_serial': debug_serial,
+            }],
+        ),
+    ])
