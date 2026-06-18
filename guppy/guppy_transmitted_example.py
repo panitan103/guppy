@@ -8,7 +8,7 @@ class GuppyTransmittedExample(Node):
 
     def __init__(self):
         super().__init__('guppy_transmitted_example')
-        self.declare_parameter('rate_hz', 10.0)
+        self.declare_parameter('rate_hz', 5.0)
         self.declare_parameter('step', 10)
 
         rate_hz = self.get_parameter('rate_hz').get_parameter_value().double_value

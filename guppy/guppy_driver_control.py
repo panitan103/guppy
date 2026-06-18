@@ -94,7 +94,7 @@ class GuppyTransmitted(Node):
             10)
         self.subscription  # prevent unused variable warningGuppyDriverReceived
 
-    def transmitted_callback(self, msg):
+    def transmitted_callback(self, msg:GuppyDriverTransmitted):
         # self.get_logger().info('I heard: "%s"' % msg.data)
 
         Surge=twos_complement_transmitted(int(msg.surge),16)
@@ -112,7 +112,7 @@ class GuppyTransmitted(Node):
 
         serial_out=([int('AB',16),int('CD',16)]+Surge+Sway+Yaw+Heave+S1+S2+O1+O2+O3+O4+cal_sum_sent)
         self.ser.write(bytes(serial_out))
-        print(serial_out)
+        # print(serial_out)
 
     def received_callback(self):
         waiting = self.ser.in_waiting
