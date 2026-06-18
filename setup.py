@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'guppy_driver_control = guppy.guppy_driver_control:main',
+            'guppy_transmitted_example = guppy.guppy_transmitted_example:main',
         ],
     },
 )
