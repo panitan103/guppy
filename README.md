@@ -44,7 +44,7 @@ Useful launch parameters:
 - `baud_rate`: default `115200`.
 - `rtscts`: hardware flow control, default `true`.
 - `debug_serial`: packet logging, default `false`.
-- `cmd_vel_max_output`: normalized `/guppy/cmd_vel` scale, default `200`.
+- `cmd_vel_max_output`: normalized `/guppy/cmd_vel` scale, default `400`.
 - `cmd_timeout_sec`: command timeout before neutral command, default `0.5`.
 - `enable_legacy_topics`: default `true`.
 - `enable_cmd_vel`: default `true`.
@@ -79,8 +79,9 @@ The driver maps AUV-style velocity axes into the MCU command message:
 - `linear.z` -> `heave`
 - `angular.z` -> `yaw`
 
-Inputs are clipped to `-1.0..1.0`, scaled by `cmd_vel_max_output`, then encoded
-as signed 16-bit values in the MCU command packet.
+Inputs are clipped to `-1.0..1.0`, scaled by `cmd_vel_max_output`, clamped to
+the MCU-supported `-400..400` command range, then encoded as signed 16-bit
+values in the MCU command packet.
 
 ## Serial Protocol
 
@@ -88,8 +89,16 @@ ROS/SBC to MCU command packet:
 
 - Header: `AB CD`
 - Fields: `surge`, `sway`, `yaw`, `heave` as signed 16-bit big-endian values.
+- Motion command range: `-400..400` for `surge`, `sway`, `yaw`, and `heave`.
 - Aux fields: `s1`, `s2`, `o1`, `o2`, `o3`, `o4` as unsigned bytes.
 - Checksum: low byte of the sum of all previous bytes.
+
+Example command packet:
+
+```text
+AB CD 00 00 00 10 00 10 00 10 01 01 00 00 00 00 AA
+00 00 SG SG SW SW YW YW HV HV S1 S2 O1 O2 O3 O4 CS
+```
 
 MCU to ROS/SBC telemetry line:
 

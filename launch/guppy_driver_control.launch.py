@@ -33,7 +33,7 @@ def generate_launch_description():
             description='Enable serial packet debug logging.'),
         DeclareLaunchArgument(
             'cmd_vel_max_output',
-            default_value='200',
+            default_value='400',
             description='Maximum Guppy command generated from normalized cmd_vel.'),
         DeclareLaunchArgument(
             'cmd_timeout_sec',

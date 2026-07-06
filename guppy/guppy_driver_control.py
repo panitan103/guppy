@@ -43,6 +43,8 @@ class GuppySerialProtocol:
     transmitted_header = [0xAB, 0xCD]
     received_header = [0xDC, 0xBA]
     received_packet_size = 14
+    command_min = -400
+    command_max = 400
 
     @staticmethod
     def hex_byte(value):
@@ -82,15 +84,20 @@ class GuppySerialProtocol:
     def encode_command(cls, msg):
         """Encode a Guppy command message for the MCU serial protocol."""
         payload = (
-            cls.int16_to_bytes(msg.surge)
-            + cls.int16_to_bytes(msg.sway)
-            + cls.int16_to_bytes(msg.yaw)
-            + cls.int16_to_bytes(msg.heave)
+            cls.int16_to_bytes(cls.motion_command_value(msg.surge))
+            + cls.int16_to_bytes(cls.motion_command_value(msg.sway))
+            + cls.int16_to_bytes(cls.motion_command_value(msg.yaw))
+            + cls.int16_to_bytes(cls.motion_command_value(msg.heave))
             + cls.uint8_fields([msg.s1, msg.s2, msg.o1, msg.o2, msg.o3, msg.o4])
         )
         packet = cls.transmitted_header + payload
         packet.append(sum(packet) & 0xFF)
         return bytes(packet)
+
+    @classmethod
+    def motion_command_value(cls, value):
+        """Clamp a motion command to the MCU-supported command range."""
+        return max(cls.command_min, min(cls.command_max, int(value)))
 
     @staticmethod
     def uint8_fields(values):
@@ -139,7 +146,7 @@ class CmdVelAdapter:
     """Convert normalized Twist commands into Guppy MCU command messages."""
 
     def __init__(self, max_output):
-        self.max_output = abs(int(max_output))
+        self.max_output = GuppySerialProtocol.motion_command_value(abs(int(max_output)))
 
     def to_guppy_command(self, twist):
         """Map AUV-style Twist axes into the Guppy command message."""
@@ -165,7 +172,7 @@ class GuppyDriverNode(Node):
         self.declare_parameter('baud_rate', 115200)
         self.declare_parameter('rtscts', True)
         self.declare_parameter('debug_serial', False)
-        self.declare_parameter('cmd_vel_max_output', 200)
+        self.declare_parameter('cmd_vel_max_output', GuppySerialProtocol.command_max)
         self.declare_parameter('cmd_timeout_sec', 0.5)
         self.declare_parameter('enable_legacy_topics', True)
         self.declare_parameter('enable_cmd_vel', True)

@@ -61,6 +61,40 @@ def test_encode_command_preserves_wire_format():
     assert encoded[-1] == checksum(expected_without_checksum)
 
 
+def test_encode_command_clamps_motion_fields_to_mcu_range():
+    """Surge, sway, yaw, and heave are constrained to -400..400."""
+    msg = command_from_values(
+        surge=-401,
+        sway=401,
+        yaw=-999,
+        heave=999,
+        aux=[255, 256, -1, 0, 1, 2],
+    )
+
+    encoded = list(GuppySerialProtocol.encode_command(msg))
+    expected_without_checksum = [
+        0xAB,
+        0xCD,
+        0xFE,
+        0x70,
+        0x01,
+        0x90,
+        0xFE,
+        0x70,
+        0x01,
+        0x90,
+        0xFF,
+        0x00,
+        0xFF,
+        0x00,
+        0x01,
+        0x02,
+    ]
+
+    assert encoded[:-1] == expected_without_checksum
+    assert encoded[-1] == checksum(expected_without_checksum)
+
+
 def test_parse_received_line_and_convert_to_message():
     """Valid telemetry packets are parsed and converted into ROS messages."""
     packet = [
@@ -127,12 +161,12 @@ def test_cmd_vel_adapter_clips_and_scales_auv_axes():
     twist.linear.z = 1.0
     twist.angular.z = -0.25
 
-    msg = CmdVelAdapter(max_output=200).to_guppy_command(twist)
+    msg = CmdVelAdapter(max_output=400).to_guppy_command(twist)
 
-    assert msg.surge == 100
-    assert msg.sway == -200
-    assert msg.heave == 200
-    assert msg.yaw == -50
+    assert msg.surge == 200
+    assert msg.sway == -400
+    assert msg.heave == 400
+    assert msg.yaw == -100
     assert msg.s1 == 0
     assert msg.o4 == 0
 

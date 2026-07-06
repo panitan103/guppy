@@ -13,7 +13,7 @@ class GuppyTransmittedExample(Node):
 
         rate_hz = self.get_parameter('rate_hz').get_parameter_value().double_value
         self.step = self.get_parameter('step').get_parameter_value().integer_value
-        self.value = -200
+        self.value = -400
         self.direction = 1
 
         self.publisher = self.create_publisher(
@@ -42,11 +42,11 @@ class GuppyTransmittedExample(Node):
             throttle_duration_sec=1.0)
 
         self.value += self.step * self.direction
-        if self.value >= 200:
-            self.value = 200
+        if self.value >= 400:
+            self.value = 400
             self.direction = -1
-        elif self.value <= -200:
-            self.value = -200
+        elif self.value <= -400:
+            self.value = -400
             self.direction = 1
 
 
