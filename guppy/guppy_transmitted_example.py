@@ -1,10 +1,10 @@
+from guppy_interface.msg import GuppyDriverTransmitted
 import rclpy
 from rclpy.node import Node
 
-from guppy_interface.msg import GuppyDriverTransmitted
-
 
 class GuppyTransmittedExample(Node):
+    """Publish a simple oscillating Guppy command for driver testing."""
 
     def __init__(self):
         super().__init__('guppy_transmitted_example')
@@ -23,6 +23,7 @@ class GuppyTransmittedExample(Node):
         self.timer = self.create_timer(1.0 / rate_hz, self.publish_command)
 
     def publish_command(self):
+        """Publish the next sample command."""
         msg = GuppyDriverTransmitted()
         msg.surge = self.value
         msg.sway = self.value
@@ -50,6 +51,7 @@ class GuppyTransmittedExample(Node):
 
 
 def main(args=None):
+    """Run the example command publisher."""
     rclpy.init(args=args)
     node = GuppyTransmittedExample()
     rclpy.spin(node)
