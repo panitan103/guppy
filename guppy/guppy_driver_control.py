@@ -43,6 +43,8 @@ class GuppySerialProtocol:
     transmitted_header = [0xAB, 0xCD]
     received_header = [0xDC, 0xBA]
     received_packet_size = 14
+    # RC-style motion command range expected by the Teensy firmware.
+    # The MCU owns motor mixing and PCA9685 pulse-width conversion.
     command_min = -400
     command_max = 400
 
@@ -96,7 +98,7 @@ class GuppySerialProtocol:
 
     @classmethod
     def motion_command_value(cls, value):
-        """Clamp a motion command to the MCU-supported command range."""
+        """Clamp a motion command to the MCU's RC-style input range."""
         return max(cls.command_min, min(cls.command_max, int(value)))
 
     @staticmethod

@@ -25,6 +25,9 @@ Current firmware hardware notes:
   - MS5837 pressure/depth sensor.
 - No servo is currently attached to the MCU.
 - PCA9685 channels are currently used for ESC/thruster outputs.
+- ROS sends RC-style motion commands to the MCU. The MCU handles motor mixing,
+  converts mixed motor outputs into pulse widths, constrains those pulse-width
+  commands around the ESC-safe band, and maps them to PCA9685 12-bit counts.
 
 ## Nodes
 
@@ -80,8 +83,8 @@ The driver maps AUV-style velocity axes into the MCU command message:
 - `angular.z` -> `yaw`
 
 Inputs are clipped to `-1.0..1.0`, scaled by `cmd_vel_max_output`, clamped to
-the MCU-supported `-400..400` command range, then encoded as signed 16-bit
-values in the MCU command packet.
+the MCU's RC-style `-400..400` command input range, then encoded as signed
+16-bit values in the MCU command packet.
 
 ## Serial Protocol
 
@@ -90,6 +93,7 @@ ROS/SBC to MCU command packet:
 - Header: `AB CD`
 - Fields: `surge`, `sway`, `yaw`, `heave` as signed 16-bit big-endian values.
 - Motion command range: `-400..400` for `surge`, `sway`, `yaw`, and `heave`.
+  This mirrors the RC receiver command range expected by the Teensy firmware.
 - Aux fields: `s1`, `s2`, `o1`, `o2`, `o3`, `o4` as unsigned bytes.
 - Checksum: low byte of the sum of all previous bytes.
 
@@ -99,6 +103,15 @@ Example command packet:
 AB CD 00 00 00 10 00 10 00 10 01 01 00 00 00 00 AA
 00 00 SG SG SW SW YW YW HV HV S1 S2 O1 O2 O3 O4 CS
 ```
+
+Important boundary:
+
+- ROS/SBC sends `-400..400` motion intent directly to the MCU.
+- The MCU firmware runs `ForwardKinematic(...)` to produce eight motor outputs.
+- The firmware multiplies motor outputs by `5`, adds/subtracts from `1500`,
+  constrains the pulse-width command around the ESC-safe band, then maps it to
+  the PCA9685 12-bit PWM count.
+- ROS should not pre-convert these commands to PCA9685 counts.
 
 MCU to ROS/SBC telemetry line:
 
